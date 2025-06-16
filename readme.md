@@ -71,3 +71,36 @@ pip install streamlit pandas geopy pydeck
 streamlit run app.py
 
     Upload ngos_chennai.csv when prompted.
+
+🧠 Optional: Waste Prediction Model
+
+    Train model on food waste patterns using Colab (train_model.ipynb)
+
+    Export as waste_predictor.pkl
+
+    Load inside Streamlit with joblib.load()
+
+This step is optional and can be skipped for manual input.
+🔒 Privacy & Ethics
+
+    No sensitive data stored
+
+    Works fully offline after CSV upload
+
+    Promotes ethical food redistribution
+
+🌟 Future Scope
+
+    Auto-location detection using geocoder or browser GPS
+
+    NGO admin panel for confirmations
+
+    Dashboard analytics for food donors
+
+    Real-time donation request queue
+
+🙌 Acknowledgements
+
+Built with ❤️ for Chennai-based hunger and waste reduction efforts.
+
+Inspired by community kitchens, student initiatives, and real-world needs.
