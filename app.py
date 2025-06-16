@@ -3,6 +3,7 @@ import pandas as pd
 from geopy.distance import geodesic
 import pydeck as pdk
 import geocoder
+import joblib
 
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
 
@@ -39,9 +40,7 @@ auto_lon = location.latlng[1] if location.ok else 80.2336
 if uploaded_file:
     ngo_df = pd.read_csv(uploaded_file)
 
-    st.sidebar.header("📊 Input Details")
-
-    import joblib
+    st.sidebar.header("📊 Input Details")   
 
 # Load ML model
 @st.cache_resource
