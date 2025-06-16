@@ -5,18 +5,16 @@ import pydeck as pdk
 import geocoder
 import os
 from datetime import datetime
+from urllib.parse import quote
 
-
+# Page configuration
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
 
+# Custom CSS
 st.markdown("""
     <style>
-        .main {
-            background-color: #f5f5f5;
-        }
-        .block-container {
-            padding: 2rem 2rem 2rem;
-        }
+        .main { background-color: #f5f5f5; }
+        .block-container { padding: 2rem 2rem 2rem; }
         .stTextInput>div>div>input {
             background-color: #fff;
             border-radius: 8px;
@@ -31,34 +29,36 @@ st.markdown("""
 st.title("🍱 Smart Food Waste Matcher - Chennai")
 st.write("Helping kitchens connect with nearby NGOs to reduce food waste and support the needy.")
 
+# Sidebar: Upload NGO data
 st.sidebar.header("📄 Upload NGO Data")
 uploaded_file = st.sidebar.file_uploader("Upload 'ngos_chennai.csv'", type="csv")
 
-# Try auto-detecting user's location
+# Get approximate user location
 location = geocoder.ip('me')
-auto_lat = location.latlng[0] if location.ok else 13.0106
-auto_lon = location.latlng[1] if location.ok else 80.2336
+auto_lat, auto_lon = (13.0106, 80.2336)
+if location.ok and location.latlng:
+    auto_lat, auto_lon = location.latlng
 
 if uploaded_file:
     ngo_df = pd.read_csv(uploaded_file)
 
-    st.sidebar.header("📊 Input Details")  
+    st.sidebar.header("📊 Input Details")
     predicted_waste = st.sidebar.slider("Predicted Food Waste (kg)", 1, 100, 10)
 
     with st.sidebar.expander("📍 Kitchen Location"):
         use_auto = st.checkbox("Auto-detect my location", value=True)
         if use_auto:
-            kitchen_lat = auto_lat
-            kitchen_lon = auto_lon
+            kitchen_lat, kitchen_lon = auto_lat, auto_lon
         else:
-            kitchen_lat = st.number_input("Your Latitude", value=13.0106, format="%f")
-            kitchen_lon = st.number_input("Your Longitude", value=80.2336, format="%f")
+            kitchen_lat = st.number_input("Your Latitude", value=13.0106, format="%.6f")
+            kitchen_lon = st.number_input("Your Longitude", value=80.2336, format="%.6f")
 
     kitchen_name = st.sidebar.text_input("🏨 Kitchen/Hotel Name", value="My Kitchen")
     kitchen_contact = st.sidebar.text_input("📞 Contact Number", value="")
 
     kitchen_loc = (kitchen_lat, kitchen_lon)
 
+    # Filter NGOs by capacity and sort by distance
     filtered = ngo_df[ngo_df['Capacity_kg'] >= predicted_waste].copy()
     filtered['Distance_km'] = filtered.apply(
         lambda row: geodesic(kitchen_loc, (row['Latitude'], row['Longitude'])).km,
@@ -78,11 +78,17 @@ if uploaded_file:
             st.markdown(f"[🗺️ Route]({map_url})")
         st.markdown("---")
 
+    # Map visualization
     st.subheader("🗺️ NGO Locations on Map")
-    map_data = closest_ngos[['Latitude', 'Longitude']]
-    map_data['Name'] = closest_ngos['Name']
+    map_data = closest_ngos[['Latitude', 'Longitude', 'Name']].copy()
     map_data['Type'] = 'NGO'
-    kitchen_df = pd.DataFrame([{'Latitude': kitchen_lat, 'Longitude': kitchen_lon, 'Name': kitchen_name, 'Type': 'Kitchen'}])
+
+    kitchen_df = pd.DataFrame([{
+        'Latitude': kitchen_lat,
+        'Longitude': kitchen_lon,
+        'Name': kitchen_name,
+        'Type': 'Kitchen'
+    }])
     map_df = pd.concat([kitchen_df, map_data], ignore_index=True)
 
     st.pydeck_chart(pdk.Deck(
@@ -114,34 +120,38 @@ if uploaded_file:
         ]
     ))
 
+    # WhatsApp message
     st.subheader("📲 Message NGO via WhatsApp")
-    message = f"🔔 {kitchen_name} has {predicted_waste}kg food ready at ({kitchen_lat}, {kitchen_lon}). Contact: {kitchen_contact}. Suggested NGO: {closest_ngos.iloc[0]['Name']} - {closest_ngos.iloc[0]['Contact']}"
+    message = (
+        f"🔔 {kitchen_name} has {predicted_waste}kg food ready at "
+        f"({kitchen_lat}, {kitchen_lon}). Contact: {kitchen_contact}. "
+        f"Suggested NGO: {closest_ngos.iloc[0]['Name']} - {closest_ngos.iloc[0]['Contact']}"
+    )
     st.text_area("Preview", message, height=80)
-    whatsapp_url = f"https://api.whatsapp.com/send?phone=&text={message.replace(' ', '%20')}"
+    encoded_msg = quote(message)
+    whatsapp_url = f"https://api.whatsapp.com/send?phone=&text={encoded_msg}"
     st.markdown(f"[📤 Send via WhatsApp]({whatsapp_url})")
+
+    # Log to CSV
     record = {
-    "timestamp": datetime.now().isoformat(),
-    "predicted_waste_kg": predicted_waste,
-    "kitchen_latitude": kitchen_lat,
-    "kitchen_longitude": kitchen_lon
-}
+        "timestamp": datetime.now().isoformat(),
+        "predicted_waste_kg": predicted_waste,
+        "kitchen_latitude": kitchen_lat,
+        "kitchen_longitude": kitchen_lon
+    }
 
-# Convert to DataFrame
-new_data = pd.DataFrame([record])
+    csv_path = "waste_logs.csv"
+    if os.path.exists(csv_path):
+        existing = pd.read_csv(csv_path)
+        full_data = pd.concat([existing, pd.DataFrame([record])], ignore_index=True)
+    else:
+        full_data = pd.DataFrame([record])
 
-# Save or append to 'waste_logs.csv'
-csv_path = "waste_logs.csv"
-if os.path.exists(csv_path):
-    existing = pd.read_csv(csv_path)
-    full_data = pd.concat([existing, new_data], ignore_index=True)
-else:
-    full_data = new_data
-
-full_data.to_csv(csv_path, index=False)
-st.success("✅ Waste record saved to 'waste_logs.csv'")
-
+    full_data.to_csv(csv_path, index=False)
+    st.success("✅ Waste record saved to 'waste_logs.csv'")
 
 else:
     st.warning("⬆️ Please upload a valid CSV file to begin.")
 
 st.caption("Built with ❤️ in Chennai")
+
