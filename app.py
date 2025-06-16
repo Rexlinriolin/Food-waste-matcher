@@ -3,7 +3,7 @@ import pandas as pd
 from geopy.distance import geodesic
 import pydeck as pdk
 import geocoder
-import joblib
+
 
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
 
@@ -40,39 +40,7 @@ auto_lon = location.latlng[1] if location.ok else 80.2336
 if uploaded_file:
     ngo_df = pd.read_csv(uploaded_file)
 
-    st.sidebar.header("📊 Input Details")   
-
-# Load ML model
-@st.cache_resource
-def load_model():
-    return joblib.load("waste_predictor.pkl")
-
-model = load_model()
-
-# --- ML Prediction UI ---
-st.subheader("🧠 Predict Food Waste Automatically")
-with st.form("predictor_form"):
-    day_input = st.selectbox("Day of the Week", ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
-    meal_input = st.selectbox("Meal Type", ['breakfast', 'lunch', 'dinner'])
-    guests = st.slider("Guest Count", 50, 500, 150)
-    event = st.radio("Is it a special event?", ['No', 'Yes'])
-    event_flag = 1 if event == 'Yes' else 0
-
-    submitted = st.form_submit_button("📊 Predict Waste")
-
-if submitted:
-    input_df = pd.DataFrame([{
-        'day_of_week': day_input,
-        'meal_type': meal_input,
-        'guest_count': guests,
-        'special_event': event_flag
-    }])
-    predicted_waste = round(model.predict(input_df)[0], 2)
-    st.success(f"Predicted Waste: {predicted_waste} kg 🍽️")
-
-    # Optionally, store this value in session state
-    st.session_state.predicted_waste = predicted_waste
-
+    st.sidebar.header("📊 Input Details")  
     predicted_waste = st.sidebar.slider("Predicted Food Waste (kg)", 1, 100, 10)
 
     with st.sidebar.expander("📍 Kitchen Location"):
