@@ -119,8 +119,7 @@ if uploaded_file:
     st.text_area("Preview", message, height=80)
     whatsapp_url = f"https://api.whatsapp.com/send?phone=&text={message.replace(' ', '%20')}"
     st.markdown(f"[📤 Send via WhatsApp]({whatsapp_url})")
-
-record = {
+    record = {
     "timestamp": datetime.now().isoformat(),
     "predicted_waste_kg": predicted_waste,
     "kitchen_latitude": kitchen_lat,
