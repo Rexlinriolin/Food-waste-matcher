@@ -3,6 +3,8 @@ import pandas as pd
 from geopy.distance import geodesic
 import pydeck as pdk
 import geocoder
+import os
+from datetime import datetime
 
 
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
@@ -117,6 +119,27 @@ if uploaded_file:
     st.text_area("Preview", message, height=80)
     whatsapp_url = f"https://api.whatsapp.com/send?phone=&text={message.replace(' ', '%20')}"
     st.markdown(f"[📤 Send via WhatsApp]({whatsapp_url})")
+
+record = {
+    "timestamp": datetime.now().isoformat(),
+    "predicted_waste_kg": predicted_waste,
+    "kitchen_latitude": kitchen_lat,
+    "kitchen_longitude": kitchen_lon
+}
+
+# Convert to DataFrame
+new_data = pd.DataFrame([record])
+
+# Save or append to 'waste_logs.csv'
+csv_path = "waste_logs.csv"
+if os.path.exists(csv_path):
+    existing = pd.read_csv(csv_path)
+    full_data = pd.concat([existing, new_data], ignore_index=True)
+else:
+    full_data = new_data
+
+full_data.to_csv(csv_path, index=False)
+st.success("✅ Waste record saved to 'waste_logs.csv'")
 
 else:
     st.warning("⬆️ Please upload a valid CSV file to begin.")
