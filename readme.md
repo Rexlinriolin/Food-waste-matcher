@@ -29,4 +29,45 @@ Millions of kilograms of edible food are wasted every day while many go hungry. 
 ---
 
 ## 📦 Project Structure
+smart-food-matcher/
+├── app.py # Streamlit app with full functionality
+├── waste_logs.csv # Auto-created log of donation records
+├── ngos_chennai.csv # NGO dataset (uploadable by user)
+├── waste_predictor.pkl # (Optional) ML model file
+├── train_model.ipynb # (Optional) Colab notebook for ML
+├── README.md # This documentation
 
+
+---
+
+## ✅ Features
+
+| Module | Description |
+|--------|-------------|
+| 🔢 Waste Input | Enter expected food waste (kg) |
+| 🧭 Location Input | Enter latitude/longitude manually or auto-detect *(future)* |
+| 📥 NGO Matching | Filters NGOs by distance & capacity |
+| 📲 WhatsApp Message | Auto-generate message with NGO contact |
+| 🗺️ Live Map | See kitchen + NGOs on interactive map |
+| 💾 Data Logging | All donations saved to `waste_logs.csv` |
+
+---
+
+## 🧾 NGO CSV Format
+
+```csv
+Name,Area,Latitude,Longitude,Capacity_kg,Contact
+Feeding India,Anna Nagar,13.0878,80.2170,50,+919876543210
+No Waste NGO,Teynampet,13.0418,80.2500,25,+918765432109
+
+🚀 How to Run
+
+    Install dependencies:
+
+pip install streamlit pandas geopy pydeck
+
+    Run the app:
+
+streamlit run app.py
+
+    Upload ngos_chennai.csv when prompted.
