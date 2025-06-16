@@ -1,4 +1,4 @@
-# 🍱 Smart Food Matcher - Chennai
+# 🍱 Food Waste Matcher - Chennai
 
 A modern data-driven solution to reduce food waste by intelligently matching surplus food from restaurants, hotels, and canteens with NGOs in **Chennai, Tamil Nadu** that can collect and distribute it to those in need.
 
