@@ -3,3 +3,4 @@ pandas
 geopy
 geocoder
 pydeck
+joblib
