@@ -140,6 +140,7 @@ else:
 full_data.to_csv(csv_path, index=False)
 st.success("✅ Waste record saved to 'waste_logs.csv'")
 
+
 else:
     st.warning("⬆️ Please upload a valid CSV file to begin.")
 
