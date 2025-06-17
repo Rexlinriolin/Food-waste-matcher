@@ -82,11 +82,10 @@ if uploaded_file:
             map_url = f"https://www.google.com/maps/dir/{kitchen_lat},{kitchen_lon}/{ngo['Latitude']},{ngo['Longitude']}"
             st.markdown(f"[🗺️ Route]({map_url})")
         st.markdown("---")
-
-        if food_image:
+        
+    if food_image:
         st.subheader("📷 Uploaded Image")
         st.image(food_image, use_column_width=True)
-
 
     # Map visualization
     st.subheader("🗺️ NGO Locations on Map")
