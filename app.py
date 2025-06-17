@@ -142,7 +142,7 @@ if uploaded_file:
     st.markdown(f"[📤 Send via WhatsApp]({whatsapp_url})")
 
     # Log to CSV
-        record = {
+    record = {
         "timestamp": datetime.now().isoformat(),
         "kitchen_name": kitchen_name,
         "contact": kitchen_contact,
