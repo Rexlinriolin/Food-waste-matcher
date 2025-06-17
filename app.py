@@ -143,13 +143,17 @@ if uploaded_file:
     st.markdown(f"[📤 Send via WhatsApp]({whatsapp_url})")
 
     # Log to CSV
-    record = {
+        record = {
         "timestamp": datetime.now().isoformat(),
+        "kitchen_name": kitchen_name,
+        "contact": kitchen_contact,
+        "food_type": food_type,
+        "ready_time": ready_time.strftime("%H:%M"),
         "predicted_waste_kg": predicted_waste,
         "kitchen_latitude": kitchen_lat,
         "kitchen_longitude": kitchen_lon
     }
-
+   
     csv_path = "waste_logs.csv"
     if os.path.exists(csv_path):
         existing = pd.read_csv(csv_path)
