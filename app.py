@@ -44,6 +44,8 @@ if uploaded_file:
 
     st.sidebar.header("📊 Input Details")
     predicted_waste = st.sidebar.slider("Predicted Food Waste (kg)", 1, 100, 10)
+    food_type = st.sidebar.selectbox("🍛 Type of Food", ["veg", "non-veg", "both"])
+
 
     with st.sidebar.expander("📍 Kitchen Location"):
         use_auto = st.checkbox("Auto-detect my location", value=True)
@@ -64,7 +66,14 @@ if uploaded_file:
     kitchen_loc = (kitchen_lat, kitchen_lon)
 
     # Filter NGOs by capacity and sort by distance
-    filtered = ngo_df[ngo_df['Capacity_kg'] >= predicted_waste].copy()
+    filtered = ngo_df[
+    (ngo_df['Capacity_kg'] >= predicted_waste) &
+    (
+        (ngo_df['Accepted_Food_Types'].str.lower() == food_type) |
+        (ngo_df['Accepted_Food_Types'].str.lower() == "both")
+    )
+].copy()
+
     filtered['Distance_km'] = filtered.apply(
         lambda row: geodesic(kitchen_loc, (row['Latitude'], row['Longitude'])).km,
         axis=1
