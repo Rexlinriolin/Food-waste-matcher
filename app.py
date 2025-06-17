@@ -6,6 +6,8 @@ import geocoder
 import os
 from datetime import datetime
 from urllib.parse import quote
+import joblib
+
 
 # Page configuration
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
@@ -43,7 +45,27 @@ if uploaded_file:
     ngo_df = pd.read_csv(uploaded_file)
 
     st.sidebar.header("📊 Input Details")
-    predicted_waste = st.sidebar.slider("Predicted Food Waste (kg)", 1, 100, 10)
+    st.sidebar.header("🧠 ML Prediction Input")
+
+meals = st.sidebar.number_input("Meals Prepared", min_value=10, max_value=2000, value=100)
+guests = st.sidebar.number_input("Guests Served", min_value=5, max_value=2000, value=90)
+cuisine = st.sidebar.selectbox("Cuisine Type", ['Veg', 'Non-Veg', 'Mixed'])
+timeofday = st.sidebar.selectbox("Time of Day", ['Morning', 'Afternoon', 'Evening'])
+
+# Load model once
+@st.cache_resource
+def load_model():
+    return joblib.load("waste_predictor.pkl")
+
+model = load_model()
+
+cuisine_map = {'Veg': 0, 'Non-Veg': 1, 'Mixed': 2}
+time_map = {'Morning': 0, 'Afternoon': 1, 'Evening': 2}
+
+input_features = [[meals, guests, cuisine_map[cuisine], time_map[timeofday]]]
+predicted_waste = model.predict(input_features)[0]
+st.sidebar.metric("Predicted Waste (kg)", f"{predicted_waste:.2f}")
+
     food_type = st.sidebar.selectbox("🍛 Type of Food", ["veg", "non-veg", "both"])
 
 
