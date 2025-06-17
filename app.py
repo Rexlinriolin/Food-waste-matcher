@@ -54,7 +54,12 @@ if uploaded_file:
             kitchen_lon = st.number_input("Your Longitude", value=80.2336, format="%.6f")
 
     kitchen_name = st.sidebar.text_input("🏨 Kitchen/Hotel Name", value="My Kitchen")
+    
     kitchen_contact = st.sidebar.text_input("📞 Contact Number", value="")
+    food_type = st.sidebar.selectbox("🍽️ Type of Food", ["Vegetarian", "Non-Vegetarian", "Mixed"])
+    ready_time = st.sidebar.time_input("⏰ Ready for Pickup At")
+    food_image = st.sidebar.file_uploader("🖼️ Upload Image of Food/Kitchen", type=["jpg", "png"])
+
 
     kitchen_loc = (kitchen_lat, kitchen_lon)
 
@@ -77,6 +82,11 @@ if uploaded_file:
             map_url = f"https://www.google.com/maps/dir/{kitchen_lat},{kitchen_lon}/{ngo['Latitude']},{ngo['Longitude']}"
             st.markdown(f"[🗺️ Route]({map_url})")
         st.markdown("---")
+
+        if food_image:
+        st.subheader("📷 Uploaded Image")
+        st.image(food_image, use_column_width=True)
+
 
     # Map visualization
     st.subheader("🗺️ NGO Locations on Map")
