@@ -6,3 +6,4 @@ pandas
 streamlit
 pydeck
 geocoder
+numpy
