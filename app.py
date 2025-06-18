@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from urllib.parse import quote
 import joblib
+import numpy as np
 
 # Page configuration
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
@@ -40,49 +41,48 @@ auto_lat, auto_lon = (13.0106, 80.2336)
 if location.ok and location.latlng:
     auto_lat, auto_lon = location.latlng
 
+# Cache ML model loading
+@st.cache_resource
+def load_model():
+    return joblib.load("waste_predictor.pkl")
+
+model = load_model()
+
 if uploaded_file:
     ngo_df = pd.read_csv(uploaded_file)
 
-    st.sidebar.header("📊 Input Details")
-    st.sidebar.header("🧠 ML Prediction Input")
-
+    st.sidebar.header("🧠 ML Waste Prediction")
     meals = st.sidebar.number_input("Meals Prepared", min_value=10, max_value=2000, value=100)
     guests = st.sidebar.number_input("Guests Served", min_value=5, max_value=2000, value=90)
     cuisine = st.sidebar.selectbox("Cuisine Type", ['Veg', 'Non-Veg', 'Mixed'])
     timeofday = st.sidebar.selectbox("Time of Day", ['Morning', 'Afternoon', 'Evening'])
 
-    # Load model once
-    @st.cache_resource
-    def load_model():
-        return joblib.load("waste_predictor.pkl")
-
-    model = load_model()
-
     cuisine_map = {'Veg': 0, 'Non-Veg': 1, 'Mixed': 2}
     time_map = {'Morning': 0, 'Afternoon': 1, 'Evening': 2}
 
-    input_features = [[meals, guests, cuisine_map[cuisine], time_map[timeofday]]]
-    predicted_waste = model.predict(input_features)[0]
+    input_features = np.array([[meals, guests, cuisine_map[cuisine], time_map[timeofday]]])
+    predicted_waste = round(model.predict(input_features)[0], 2)
     st.sidebar.metric("Predicted Waste (kg)", f"{predicted_waste:.2f}")
 
-    food_type = st.sidebar.selectbox("🍽️ Type of Food", ["Vegetarian", "Non-Vegetarian", "Mixed"])
+    st.sidebar.header("🍽️ Additional Info")
+    food_type = st.sidebar.selectbox("Type of Food", ["Vegetarian", "Non-Vegetarian", "Mixed"])
 
     with st.sidebar.expander("📍 Kitchen Location"):
         use_auto = st.checkbox("Auto-detect my location", value=True)
         if use_auto:
             kitchen_lat, kitchen_lon = auto_lat, auto_lon
         else:
-            kitchen_lat = st.number_input("Your Latitude", value=13.0106, format="%.6f")
-            kitchen_lon = st.number_input("Your Longitude", value=80.2336, format="%.6f")
+            kitchen_lat = st.number_input("Latitude", value=13.0106, format="%.6f")
+            kitchen_lon = st.number_input("Longitude", value=80.2336, format="%.6f")
 
     kitchen_name = st.sidebar.text_input("🏨 Kitchen/Hotel Name", value="My Kitchen")
     kitchen_contact = st.sidebar.text_input("📞 Contact Number", value="")
     ready_time = st.sidebar.time_input("⏰ Ready for Pickup At")
-    food_image = st.sidebar.file_uploader("🖼️ Upload Image of Food/Kitchen", type=["jpg", "png"])
+    food_image = st.sidebar.file_uploader("🖼️ Upload Food/Kitchen Image", type=["jpg", "jpeg", "png"])
 
     kitchen_loc = (kitchen_lat, kitchen_lon)
 
-    # Filter NGOs by capacity and sort by distance
+    # Filter NGOs
     filtered = ngo_df[
         (ngo_df['Capacity_kg'] >= predicted_waste) &
         (
@@ -108,12 +108,12 @@ if uploaded_file:
             map_url = f"https://www.google.com/maps/dir/{kitchen_lat},{kitchen_lon}/{ngo['Latitude']},{ngo['Longitude']}"
             st.markdown(f"[🗺️ Route]({map_url})")
         st.markdown("---")
-        
+
     if food_image:
         st.subheader("📷 Uploaded Image")
         st.image(food_image, use_column_width=True)
 
-    # Map visualization
+    # Map Visualization
     st.subheader("🗺️ NGO Locations on Map")
     map_data = closest_ngos[['Latitude', 'Longitude', 'Name']].copy()
     map_data['Type'] = 'NGO'
@@ -155,7 +155,7 @@ if uploaded_file:
         ]
     ))
 
-    # WhatsApp message
+    # WhatsApp Message
     st.subheader("📲 Message NGO via WhatsApp")
     message = (
         f"🔔 {kitchen_name} has {predicted_waste}kg food ready at "
@@ -167,7 +167,7 @@ if uploaded_file:
     whatsapp_url = f"https://api.whatsapp.com/send?phone=&text={encoded_msg}"
     st.markdown(f"[📤 Send via WhatsApp]({whatsapp_url})")
 
-    # Log to CSV
+    # Save log
     record = {
         "timestamp": datetime.now().isoformat(),
         "kitchen_name": kitchen_name,
@@ -178,7 +178,7 @@ if uploaded_file:
         "kitchen_latitude": kitchen_lat,
         "kitchen_longitude": kitchen_lon
     }
-   
+
     csv_path = "waste_logs.csv"
     if os.path.exists(csv_path):
         existing = pd.read_csv(csv_path)
@@ -190,7 +190,8 @@ if uploaded_file:
     st.success("✅ Waste record saved to 'waste_logs.csv'")
 
 else:
-    st.warning("⬆️ Please upload a valid CSV file to begin.")
+    st.warning("⬆️ Please upload a valid NGO CSV file to begin.")
 
 st.caption("Built with ❤️ in Chennai")
+
 
