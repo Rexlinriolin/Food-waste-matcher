@@ -1,6 +1,8 @@
-streamlit
-pandas
-geopy
-geocoder
-pydeck
+scikit-learn
+xgboost
 joblib
+geopy
+pandas
+streamlit
+pydeck
+geocoder
