@@ -8,7 +8,6 @@ from datetime import datetime
 from urllib.parse import quote
 import joblib
 
-
 # Page configuration
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
 
@@ -47,27 +46,26 @@ if uploaded_file:
     st.sidebar.header("📊 Input Details")
     st.sidebar.header("🧠 ML Prediction Input")
 
-meals = st.sidebar.number_input("Meals Prepared", min_value=10, max_value=2000, value=100)
-guests = st.sidebar.number_input("Guests Served", min_value=5, max_value=2000, value=90)
-cuisine = st.sidebar.selectbox("Cuisine Type", ['Veg', 'Non-Veg', 'Mixed'])
-timeofday = st.sidebar.selectbox("Time of Day", ['Morning', 'Afternoon', 'Evening'])
+    meals = st.sidebar.number_input("Meals Prepared", min_value=10, max_value=2000, value=100)
+    guests = st.sidebar.number_input("Guests Served", min_value=5, max_value=2000, value=90)
+    cuisine = st.sidebar.selectbox("Cuisine Type", ['Veg', 'Non-Veg', 'Mixed'])
+    timeofday = st.sidebar.selectbox("Time of Day", ['Morning', 'Afternoon', 'Evening'])
 
-# Load model once
-@st.cache_resource
-def load_model():
-    return joblib.load("waste_predictor.pkl")
+    # Load model once
+    @st.cache_resource
+    def load_model():
+        return joblib.load("waste_predictor.pkl")
 
-model = load_model()
+    model = load_model()
 
-cuisine_map = {'Veg': 0, 'Non-Veg': 1, 'Mixed': 2}
-time_map = {'Morning': 0, 'Afternoon': 1, 'Evening': 2}
+    cuisine_map = {'Veg': 0, 'Non-Veg': 1, 'Mixed': 2}
+    time_map = {'Morning': 0, 'Afternoon': 1, 'Evening': 2}
 
-input_features = [[meals, guests, cuisine_map[cuisine], time_map[timeofday]]]
-predicted_waste = model.predict(input_features)[0]
-st.sidebar.metric("Predicted Waste (kg)", f"{predicted_waste:.2f}")
+    input_features = [[meals, guests, cuisine_map[cuisine], time_map[timeofday]]]
+    predicted_waste = model.predict(input_features)[0]
+    st.sidebar.metric("Predicted Waste (kg)", f"{predicted_waste:.2f}")
 
-    food_type = st.sidebar.selectbox("🍛 Type of Food", ["veg", "non-veg", "both"])
-
+    food_type = st.sidebar.selectbox("🍽️ Type of Food", ["Vegetarian", "Non-Vegetarian", "Mixed"])
 
     with st.sidebar.expander("📍 Kitchen Location"):
         use_auto = st.checkbox("Auto-detect my location", value=True)
@@ -78,23 +76,20 @@ st.sidebar.metric("Predicted Waste (kg)", f"{predicted_waste:.2f}")
             kitchen_lon = st.number_input("Your Longitude", value=80.2336, format="%.6f")
 
     kitchen_name = st.sidebar.text_input("🏨 Kitchen/Hotel Name", value="My Kitchen")
-    
     kitchen_contact = st.sidebar.text_input("📞 Contact Number", value="")
-    food_type = st.sidebar.selectbox("🍽️ Type of Food", ["Vegetarian", "Non-Vegetarian", "Mixed"])
     ready_time = st.sidebar.time_input("⏰ Ready for Pickup At")
     food_image = st.sidebar.file_uploader("🖼️ Upload Image of Food/Kitchen", type=["jpg", "png"])
-
 
     kitchen_loc = (kitchen_lat, kitchen_lon)
 
     # Filter NGOs by capacity and sort by distance
     filtered = ngo_df[
-    (ngo_df['Capacity_kg'] >= predicted_waste) &
-    (
-        (ngo_df['Accepted_Food_Types'].str.lower() == food_type) |
-        (ngo_df['Accepted_Food_Types'].str.lower() == "both")
-    )
-].copy()
+        (ngo_df['Capacity_kg'] >= predicted_waste) &
+        (
+            (ngo_df['Accepted_Food_Types'].str.lower() == food_type.lower()) |
+            (ngo_df['Accepted_Food_Types'].str.lower() == "both")
+        )
+    ].copy()
 
     filtered['Distance_km'] = filtered.apply(
         lambda row: geodesic(kitchen_loc, (row['Latitude'], row['Longitude'])).km,
