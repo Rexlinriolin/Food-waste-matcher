@@ -13,11 +13,11 @@ import streamlit as st
 import yaml
 import streamlit_authenticator as stauth
 
-# Load the YAML config
-with open('config.yaml') as file:
+# Load config
+with open("config.yaml") as file:
     config = yaml.safe_load(file)
 
-# Setup the authenticator
+# Initialize authenticator
 authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
@@ -29,32 +29,31 @@ authenticator = stauth.Authenticate(
 # Login block
 name, authentication_status, username = authenticator.login("Login", "main")
 
-# Handle login states
-if authentication_status is False:
-    st.error("❌ Username or password is incorrect.")
-
-elif authentication_status is None:
-    st.warning("🔒 Please enter your credentials.")
-
+if authentication_status is None:
+    st.warning("🔐 Please enter your username and password.")
+elif authentication_status is False:
+    st.error("❌ Incorrect username or password.")
 elif authentication_status:
-    # ✅ Login success — hide login and proceed
+    # Hide login, show app
     authenticator.logout("Logout", "sidebar")
     st.sidebar.success(f"✅ Welcome, {name}!")
 
-    try:
-        user_role = config['credentials']['usernames'][username]['role']
-    except KeyError:
-        st.error("⚠️ User not found in config.")
-        st.stop()
+    # Role-based UI
+    user_info = config['credentials']['usernames'].get(username)
+    if user_info:
+        role = user_info.get("role", "")
+        st.markdown(f"### Logged in as **{role.title()}**")
 
-    # 👉 Now render your actual app below this point
-    if user_role == "kitchen":
-        st.header("🍽️ Kitchen Dashboard")
-        # (Insert full kitchen app here)
-
-    elif user_role == "ngo":
-        st.header("🏥 NGO Dashboard")
-        st.info("NGO dashboard coming soon!")
+        if role == "kitchen":
+            st.header("🍱 Kitchen Dashboard")
+            st.write("Upload waste info, auto-match NGOs, etc.")
+        elif role == "ngo":
+            st.header("🏥 NGO Dashboard")
+            st.write("View food offers, accept/reject them.")
+        else:
+            st.warning("👀 Unknown role. Contact admin.")
+    else:
+        st.error("⚠️ User config not found.")
 
     
 
