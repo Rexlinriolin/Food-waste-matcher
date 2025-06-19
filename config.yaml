@@ -2,7 +2,7 @@ credentials:
   usernames:
     mykitchen:
       name: My Kitchen
-      password: abc123  # plaintext (only for demo)
+      password: abc123  # Use hashed password in production!
       role: kitchen
     myngo:
       name: Helping Hands NGO
@@ -10,9 +10,9 @@ credentials:
       role: ngo
 
 cookie:
-  expiry_days: 7
-  key: some_signature_key
-  name: food-matcher-cookie
+  expiry_days: 1
+  key: some_random_key
+  name: smart_food_auth
 
 preauthorized:
   emails: []
