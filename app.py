@@ -9,6 +9,43 @@ from urllib.parse import quote
 import joblib
 import numpy as np
 
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
+
+# Load login config
+with open('config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+)
+
+name, authentication_status, username = authenticator.login('Login', 'main')
+
+if authentication_status is False:
+    st.error('Username/password is incorrect')
+elif authentication_status is None:
+    st.warning('Please enter your username and password')
+else:
+    st.sidebar.success(f"Welcome, {name}!")
+    
+
+user_role = config['credentials']['usernames'][username]['role']
+
+if user_role == 'kitchen':
+    st.header("🍽️ Kitchen Dashboard")
+        # 👉 Place your kitchen waste donation + NGO matching interface here
+elif user_role == 'ngo':
+    st.header("🏥 NGO Dashboard")
+    st.success("Welcome to the NGO dashboard!")
+    st.info("🚧 This will show incoming food requests, allow accepting/rejecting them, and keep a pickup log (coming in Step 3).")
+
+
 # Page configuration
 st.set_page_config(page_title="Smart Food Matcher - Chennai", layout="wide")
 
