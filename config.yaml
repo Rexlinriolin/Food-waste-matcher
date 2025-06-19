@@ -1,1 +1,19 @@
+credentials:
+  usernames:
+    mykitchen:
+      name: My Kitchen
+      password: abc123  # plaintext (only for demo)
+      role: kitchen
+    myngo:
+      name: Helping Hands NGO
+      password: ngo123
+      role: ngo
+
+cookie:
+  expiry_days: 7
+  key: some_signature_key
+  name: food-matcher-cookie
+
+preauthorized:
+  emails: []
 
