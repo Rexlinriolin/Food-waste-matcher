@@ -9,14 +9,15 @@ from urllib.parse import quote
 import joblib
 import numpy as np
 
-import streamlit_authenticator as stauth
+import streamlit as st
 import yaml
-from yaml.loader import SafeLoader
+import streamlit_authenticator as stauth
 
-# Load login config
+# Load the YAML config
 with open('config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
+    config = yaml.safe_load(file)
 
+# Setup the authenticator
 authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
@@ -25,14 +26,36 @@ authenticator = stauth.Authenticate(
     config['preauthorized']
 )
 
-name, authentication_status, username = authenticator.login('Login', 'main')
+# Login block
+name, authentication_status, username = authenticator.login("Login", "main")
 
+# Handle login states
 if authentication_status is False:
-    st.error('Username/password is incorrect')
+    st.error("❌ Username or password is incorrect.")
+
 elif authentication_status is None:
-    st.warning('Please enter your username and password')
-else:
-    st.sidebar.success(f"Welcome, {name}!")
+    st.warning("🔒 Please enter your credentials.")
+
+elif authentication_status:
+    # ✅ Login success — hide login and proceed
+    authenticator.logout("Logout", "sidebar")
+    st.sidebar.success(f"✅ Welcome, {name}!")
+
+    try:
+        user_role = config['credentials']['usernames'][username]['role']
+    except KeyError:
+        st.error("⚠️ User not found in config.")
+        st.stop()
+
+    # 👉 Now render your actual app below this point
+    if user_role == "kitchen":
+        st.header("🍽️ Kitchen Dashboard")
+        # (Insert full kitchen app here)
+
+    elif user_role == "ngo":
+        st.header("🏥 NGO Dashboard")
+        st.info("NGO dashboard coming soon!")
+
     
 
 user_role = config['credentials']['usernames'][username]['role']
